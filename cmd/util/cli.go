@@ -4,16 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/camerondurham/ch/cmd/streams"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
 	"github.com/spf13/viper"
-	"os"
+
+	"io"
 
 	"github.com/moby/term"
-	"io"
 )
 
 type BuildOpts struct {
@@ -33,6 +35,7 @@ type HostConfig struct {
 	PortBindings nat.PortMap       // Map of host to container ports
 	Privileged   bool              // Is the container in privileged mode
 	CapAdd       strslice.StrSlice // List of kernel capabilities to add to the container
+	NanoCpus     int64             `mapstructure:"NanoCpus,omitempty"` // CPU limit
 }
 
 type ContainerOpts struct {

@@ -63,6 +63,11 @@ func buildString(envName string, opts *ContainerOpts) string {
 				fmt.Fprintf(&b, printConfigNest1, "Port", fmt.Sprintf("%s:%s", v[0].HostPort, k.Port()))
 			}
 		}
+
+		if opts.HostConfig.NanoCpus > 0 {
+			cpusFloat := float64(opts.HostConfig.NanoCpus) / 1e9
+			fmt.Fprintf(&b, printConfigNest1, "CPUs", fmt.Sprintf("%.2f", cpusFloat))
+		}
 	}
 
 	return b.String()

@@ -186,6 +186,7 @@ Usage:
 Flags:
       --cap-add stringArray        special capacity to add to Docker Container (syscalls)
       --context string             context to build Dockerfile (default ".")
+      --cpus float                 number of CPUs to allocate to the container (default: 0.0 means all available)
   -f, --file string                path to Dockerfile, should be relative to context flag
   -h, --help                       help for create
   -i, --image string               image name to pull from DockerHub

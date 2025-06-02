@@ -3,14 +3,15 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/camerondurham/ch/cmd/util"
-	"github.com/camerondurham/ch/cmd/util/mocks"
-	"github.com/docker/docker/api/types"
-	"github.com/golang/mock/gomock"
 	"io/ioutil"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/camerondurham/ch/cmd/util"
+	"github.com/camerondurham/ch/cmd/util/mocks"
+	"github.com/docker/docker/api/types"
+	"github.com/golang/mock/gomock"
 )
 
 const (
@@ -260,7 +261,7 @@ func Test_parseHostConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHostConfig, gotShellCmd := parseHostConfig(tt.args.shellCmdArg, false, tt.args.capAddArgs, tt.args.secOptArgs, tt.args.v, tt.args.volNameArgs, nil)
+			gotHostConfig, gotShellCmd := parseHostConfig(tt.args.shellCmdArg, false, tt.args.capAddArgs, tt.args.secOptArgs, tt.args.v, tt.args.volNameArgs, nil, 0.0)
 			if !reflect.DeepEqual(gotHostConfig, tt.wantHostConfig) {
 				t.Errorf("parseHostConfig() gotHostConfig = %v, want %v", gotHostConfig, tt.wantHostConfig)
 			}

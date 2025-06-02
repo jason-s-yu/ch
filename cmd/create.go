@@ -58,7 +58,7 @@ var (
 type commandFlags struct {
 	file         string
 	image        string
-	platform	 string
+	platform     string
 	volume       []string
 	shell        string
 	context      string
@@ -67,6 +67,7 @@ type commandFlags struct {
 	portBindings []string
 	privileged   bool
 	replace      bool
+	cpus         float64
 }
 
 // CreateCmd creates a new Docker environment
@@ -84,11 +85,12 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	portBindingArgs, _ := cmd.Flags().GetStringArray("port")
 	privileged, _ := cmd.Flags().GetBool("privileged")
 	replace, _ := cmd.Flags().GetBool("replace")
+	cpus, _ := cmd.Flags().GetFloat64("cpus")
 
 	cmdFlags := &commandFlags{
 		file:         file,
 		image:        imageName,
-		platform: 	  platform,
+		platform:     platform,
 		volume:       volumeArgs,
 		shell:        shellCmdArgs,
 		context:      contextDir,
@@ -97,6 +99,7 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 		portBindings: portBindingArgs,
 		privileged:   privileged,
 		replace:      replace,
+		cpus:         cpus, // default value for cpus
 	}
 
 	queryName := viper.GetStringMapString(fmt.Sprintf("envs.%s", name))
@@ -188,11 +191,18 @@ func init() {
 
 	// ch options
 	createCmd.Flags().Bool("replace", false, "replace environment if it already exists")
+
+	createCmd.Flags().Float64("cpus", 0.0, "number of CPUs to allocate to the container (default: 0.0 means all available)")
 }
 
 func parseContainerOpts(environmentName string, v util.Validate, cmdFlags *commandFlags) (*util.ContainerOpts, error) {
 
-	hostConfig, shellCmd := parseHostConfig(cmdFlags.shell, cmdFlags.privileged, cmdFlags.capAdd, cmdFlags.securityOpt, v, cmdFlags.volume, cmdFlags.portBindings)
+	nanoCpus := int64(0)
+	if cmdFlags.cpus > 0.0 {
+		nanoCpus = int64(cmdFlags.cpus * 1e9) // conv units (1 CPU = 1e9 nanoseconds)
+	}
+
+	hostConfig, shellCmd := parseHostConfig(cmdFlags.shell, cmdFlags.privileged, cmdFlags.capAdd, cmdFlags.securityOpt, v, cmdFlags.volume, cmdFlags.portBindings, nanoCpus)
 
 	if cmdFlags.file != "" {
 		if cmdFlags.context != "" {
@@ -227,7 +237,7 @@ func parseContainerOpts(environmentName string, v util.Validate, cmdFlags *comma
 	return nil, errorCreateImageFieldsNotPresent
 }
 
-func parseHostConfig(shellCmdArg string, privileged bool, capAddArgs []string, secOptArgs []string, v util.Validate, volNameArgs []string, portOpts []string) (hostConfig *util.HostConfig, shellCmd string) {
+func parseHostConfig(shellCmdArg string, privileged bool, capAddArgs []string, secOptArgs []string, v util.Validate, volNameArgs []string, portOpts []string, nanoCpus int64) (hostConfig *util.HostConfig, shellCmd string) {
 	hostConfig = &util.HostConfig{}
 
 	if len(volNameArgs) > 0 {
@@ -262,6 +272,10 @@ func parseHostConfig(shellCmdArg string, privileged bool, capAddArgs []string, s
 
 	if privileged {
 		hostConfig.Privileged = privileged
+	}
+
+	if nanoCpus > 0 {
+		hostConfig.NanoCpus = nanoCpus
 	}
 
 	if shellCmdArg != "" {

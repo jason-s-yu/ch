@@ -3,11 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/camerondurham/ch/cmd/util"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/errdefs"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // startCmd represents the start command
@@ -121,13 +122,19 @@ func getImageName(envName string, containerOpts *util.ContainerOpts) string {
 
 func createHostConfig(containerOpts *util.ContainerOpts) *container.HostConfig {
 	if containerOpts.HostConfig != nil {
-		return &container.HostConfig{
+		hc := container.HostConfig{
 			Binds:        containerOpts.HostConfig.Binds,
 			CapAdd:       containerOpts.HostConfig.CapAdd,
 			Privileged:   containerOpts.HostConfig.Privileged,
 			PortBindings: containerOpts.HostConfig.PortBindings,
 			SecurityOpt:  containerOpts.HostConfig.SecurityOpt,
 		}
+
+		if containerOpts.HostConfig.NanoCpus > 0 {
+			hc.NanoCPUs = containerOpts.HostConfig.NanoCpus
+		}
+
+		return &hc
 	} else {
 		return &container.HostConfig{}
 	}
